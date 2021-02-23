@@ -1,15 +1,11 @@
 const FILES_TO_CACHE = [
     "/",
-    "/index.html",
-    "/assets/css/style.css",
-    "/assets/js/loadPosts.js",
-    "/assets/images/Angular-icon.png",
-    "/assets/images/React-icon.png",
-    "/assets/images/Vue.js-icon.png",
+    "/assets/css/styles.css",
+    "/assets/js/index.js",
+    "/assets/js/db.js",
     "/manifest.json",
-    "/favicon.ico",
-    "/assets/images/icons/icon-192x192.png",
-    "/assets/images/icons/icon-512x512.png",
+    "/assets/icons/icon-192x192.png",
+    "/assets/icons/icon-512x512.png",
   ];
   
   const CACHE_NAME = "static-cache-v2";
@@ -24,26 +20,9 @@ const FILES_TO_CACHE = [
       })
     );
   
-    self.skipWaiting();
   });
   
-  // when re-connect with  internet connection delete old cache
-  self.addEventListener("activate", function(evt) {
-    evt.waitUntil(
-      caches.keys().then(keyList => {
-        return Promise.all(
-          keyList.map(key => {
-            if (key !== CACHE_NAME && key !== DATA_CACHE_NAME) {
-              console.log("Removing old cache data", key);
-              return caches.delete(key);
-            }
-          })
-        );
-      })
-    );
-  
-    self.clients.claim();
-  });
+  // when re-connect with internet connection delete old cache
   
   // fetch
   self.addEventListener("fetch", function(evt) {
@@ -73,8 +52,16 @@ const FILES_TO_CACHE = [
     // if the request is not for the API, serve static assets using "offline-first" approach.
     // see https://developers.google.com/web/fundamentals/instant-and-offline/offline-cookbook#cache-falling-back-to-network
     evt.respondWith(
-      caches.match(evt.request).then(function(response) {
-        return response || fetch(evt.request);
+      // caches.match(evt.request).then(function(response) {
+      //   return response || fetch(evt.request);
+      // })
+      fetch(evt.request).catch(function(){
+        return caches.match(evt.request).then(function(response) {
+          if (response) {return response}
+          else if (evt.request.headers.get("accept").includes("text/html")){
+            return caches.match("/")
+          }
+        })
       })
     );
   });
